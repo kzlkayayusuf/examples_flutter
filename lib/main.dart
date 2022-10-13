@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:test_app/examples/dice.dart';
 import 'package:test_app/examples/person_card.dart';
+import 'package:test_app/examples/quiz.dart';
 
 void main() {
   runApp(
     const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: DiceApp(),
+      home: Quizzler(),
     ),
   );
   /*MaterialApp(
