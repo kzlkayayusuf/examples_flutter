@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:test_app/examples/quiz_brain.dart';
 
 class Quizzler extends StatelessWidget {
   const Quizzler({Key? key}) : super(key: key);
@@ -7,7 +9,7 @@ class Quizzler extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade900,
-      body: SafeArea(
+      body: const SafeArea(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 10),
           child: QuizPage(),
@@ -27,13 +29,85 @@ class QuizPage extends StatefulWidget {
 class _QuizPageState extends State<QuizPage> {
   List<Icon> scoreKeeper = [];
 
-  List<String> questions= [
-    "soru1","soru2","soru3"
-  ];
+  QuizBrain quizBrain = QuizBrain();
 
-  List<bool> answers = [false,true,false];
+  int correctNumber = 0, wrongNumber = 0;
+  late int questionNumber;
+  late double score;
 
-  int questionNumber=0;
+  void checkAnswer(bool userPickedAnswer) {
+    setState(() {
+      bool correctAnswer = quizBrain.getQuestionAnswer();
+      if (quizBrain.isLastQuestion() == false) {
+        quizBrain.nextQuestion();
+        if (userPickedAnswer == correctAnswer) {
+          correctNumber++;
+          scoreKeeper.add(
+            const Icon(
+              Icons.check,
+              color: Colors.green,
+            ),
+          );
+        } else {
+          wrongNumber++;
+          scoreKeeper.add(
+            const Icon(
+              Icons.close,
+              color: Colors.red,
+            ),
+          );
+        }
+      } else {
+        if (userPickedAnswer == correctAnswer) {
+          correctNumber++;
+          scoreKeeper.add(
+            const Icon(
+              Icons.check,
+              color: Colors.green,
+            ),
+          );
+        } else {
+          wrongNumber++;
+          scoreKeeper.add(
+            const Icon(
+              Icons.close,
+              color: Colors.red,
+            ),
+          );
+        }
+        questionNumber = quizBrain.questionNumber();
+        score = (correctNumber - (wrongNumber / 4)) * (100 / questionNumber);
+        Alert(
+            context: context,
+            title: "Oyun Bitti!",
+            content: Column(
+              children: [
+                Text('Soru Sayısı: $questionNumber'),
+                Text('Doğru Sayısı: $correctNumber'),
+                Text('Yanlış Sayısı: $wrongNumber'),
+                Text('Puanınız: $score'),
+              ],
+            ),
+            buttons: [
+              DialogButton(
+                onPressed: () {
+                  setState(() {
+                    correctNumber = 0;
+                    wrongNumber = 0;
+                    quizBrain.reset();
+                    scoreKeeper = [];
+                    Navigator.pop(context);
+                  });
+                },
+                child: const Text(
+                  "Tekrar Başla",
+                  style: TextStyle(color: Colors.white, fontSize: 20),
+                ),
+              )
+            ]).show();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,12 +118,12 @@ class _QuizPageState extends State<QuizPage> {
         Expanded(
           flex: 5,
           child: Padding(
-            padding: EdgeInsets.all(10),
+            padding: const EdgeInsets.all(10),
             child: Center(
               child: Text(
-                questions[questionNumber],
+                quizBrain.getQuestionText(),
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 25,
                   color: Colors.white,
                 ),
@@ -59,82 +133,42 @@ class _QuizPageState extends State<QuizPage> {
         ),
         Expanded(
           child: Padding(
-            padding: EdgeInsets.all(15),
+            padding: const EdgeInsets.all(15),
             child: ElevatedButton(
               onPressed: () {
-                bool correctAnswer= answers[questionNumber];
-                setState(() {
-                  questionNumber++;
-                  correctAnswer == true ?
-                  scoreKeeper.add(
-                    Icon(
-                      Icons.check,
-                      color: Colors.green,
-                    ),
-                  )
-                  :
-                  scoreKeeper.add(
-                    Icon(
-                      Icons.close,
-                      color: Colors.red,
-                    ),
-                  );
-                });
+                checkAnswer(true);
               },
-              child: Text(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green, // background
+                foregroundColor: Colors.white, // foreground
+              ),
+              child: const Text(
                 'Doğru',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,
                 ),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green, // background
-                foregroundColor: Colors.white, // foreground
-              ),
             ),
           ),
         ),
         Expanded(
           child: Padding(
-            padding: EdgeInsets.all(15),
+            padding: const EdgeInsets.all(15),
             child: ElevatedButton(
               onPressed: () {
-                bool wrongAnswer = answers[questionNumber];
-                setState(() {
-                  questionNumber++;
-                  wrongAnswer == false ?
-                  scoreKeeper.add(
-                    Icon(
-                      Icons.check,
-                      color: Colors.green,
-                    ),
-                  )
-                      :
-                  scoreKeeper.add(
-                    Icon(
-                      Icons.close,
-                      color: Colors.red,
-                    ),
-                  );
-                  /*scoreKeeper.add(
-                    Icon(
-                      Icons.close,
-                      color: Colors.red,
-                    ),
-                  );*/
-                });
+                checkAnswer(false);
               },
-              child: Text(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red, // background
+                foregroundColor: Colors.white, // foreground
+              ),
+              child: const Text(
                 'Yanlış',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,
                 ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red, // background
-                foregroundColor: Colors.white, // foreground
               ),
             ),
           ),
